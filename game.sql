@@ -120,7 +120,7 @@ BEGIN
       END IF;
 
       IF R1 = 1 THEN
-        SELECT CONCAT('Good, ', p_move, ' have played! ', R1);
+        SELECT CONCAT('Good, ', p_move, ' have played! ');
         -- UPDATE TicTacToe SET p_column = p_move WHERE ID = p_row;
         CASE
           WHEN p_column = "A" AND p_row = 1 THEN
@@ -143,7 +143,7 @@ BEGIN
             UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 3;
           END CASE;
           UPDATE ttt_PlayerTurn SET turn = CASE WHEN turn = 'X' THEN 'O' WHEN turn = 'O' THEN 'X' END;
-      ELSE (SELECT CONCAT('The moviment is wrong, please try again!! ', R1));
+      ELSE (SELECT CONCAT('The movement is wrong, please try again! '));
       END IF;
     END IF;
     -- Check if victory is achieved
