@@ -87,6 +87,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS ttt_PlayerMove//
 CREATE PROCEDURE ttt_PlayerMove(p_move VARCHAR(1), p_column VARCHAR(1), p_row INT)
 BEGIN
+    DECLARE R1 INT;
     -- Check for valid player input
     IF p_move NOT IN ('X', 'O')
         THEN (SELECT 'Move must be X or O');
@@ -99,35 +100,51 @@ BEGIN
     IF p_row NOT IN (1,2,3)
         THEN (SELECT 'Row must be 1, 2 or 3');
     END IF;
+
     -- Check for player turn and update player turn
     IF p_move != (SELECT turn FROM ttt_PlayerTurn)
       THEN (SELECT
                 CONCAT('This turn belongs to player ', (SELECT turn FROM ttt_PlayerTurn), '!')
       );
     ELSE
-      SELECT CONCAT('Good, ', p_move, ' have played!');
-      -- UPDATE TicTacToe SET p_column = p_move WHERE ID = p_row;
-      CASE
-        WHEN p_column = "A" AND p_row = 1 THEN
-          UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 1;
-        WHEN p_column = "B" AND p_row = 1 THEN
-          UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 1;
-        WHEN p_column = "C" AND p_row = 1 THEN
-          UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 1;
-        WHEN p_column = "A" AND p_row = 2 THEN
-          UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 2;
-        WHEN p_column = "B" AND p_row = 2 THEN
-          UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 2;
-        WHEN p_column = "C" AND p_row = 2 THEN
-          UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 2;
-        WHEN p_column = "A" AND p_row = 3 THEN
-          UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 3;
-        WHEN p_column = "B" AND p_row = 3 THEN
-          UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 3;
-        WHEN p_column = "C" AND p_row = 3 THEN
-          UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 3;
-      END CASE;
-      UPDATE ttt_PlayerTurn SET turn = CASE WHEN turn = 'X' THEN 'O' WHEN turn = 'O' THEN 'X' END;
+      -- Check if move is validated
+      SET R1 = 0;
+      IF 'A' = p_column THEN
+        SET R1 = (SELECT COUNT(*) FROM TicTacToe WHERE A IS NULL AND ID = p_row);
+      END IF;
+      IF 'B' = p_column THEN
+        SET R1 = (SELECT COUNT(*) FROM TicTacToe WHERE B IS NULL AND ID = p_row);
+      END IF;
+      IF 'C' = p_column THEN
+        SET R1 = (SELECT COUNT(*) FROM TicTacToe WHERE C IS NULL AND ID = p_row);
+      END IF;
+
+      IF R1 = 1 THEN
+        SELECT CONCAT('Good, ', p_move, ' have played! ', R1);
+        -- UPDATE TicTacToe SET p_column = p_move WHERE ID = p_row;
+        CASE
+          WHEN p_column = "A" AND p_row = 1 THEN
+            UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 1;
+          WHEN p_column = "B" AND p_row = 1 THEN
+            UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 1;
+          WHEN p_column = "C" AND p_row = 1 THEN
+            UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 1;
+          WHEN p_column = "A" AND p_row = 2 THEN
+            UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 2;
+          WHEN p_column = "B" AND p_row = 2 THEN
+            UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 2;
+          WHEN p_column = "C" AND p_row = 2 THEN
+            UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 2;
+          WHEN p_column = "A" AND p_row = 3 THEN
+            UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 3;
+          WHEN p_column = "B" AND p_row = 3 THEN
+            UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 3;
+          WHEN p_column = "C" AND p_row = 3 THEN
+            UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 3;
+          END CASE;
+          UPDATE ttt_PlayerTurn SET turn = CASE WHEN turn = 'X' THEN 'O' WHEN turn = 'O' THEN 'X' END;
+      ELSE (SELECT CONCAT('The moviment is wrong, please try again!! ', R1));
+      END IF;
     END IF;
     -- Check if victory is achieved
     CALL ttt_CheckVictory();
