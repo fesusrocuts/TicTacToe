@@ -1,0 +1,299 @@
+MariaDB [game]> USE mysql
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [game]> CREATE DATABASE IF NOT EXISTS game;
+Query OK, 1 row affected (0.02 sec)
+
+MariaDB [game]> USE game
+Database changed
+MariaDB [game]> DROP TABLE IF EXISTS TicTacToe;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+MariaDB [game]> CREATE TABLE TicTacToe
+    ->     (
+    ->     ID INT NOT NULL,
+    ->     A VARCHAR(1) NULL,
+    ->     B VARCHAR(1) NULL,
+    ->     C VARCHAR(1) NULL
+    ->     );
+Query OK, 0 rows affected (0.28 sec)
+
+MariaDB [game]> INSERT INTO TicTacToe(ID,A,B,C)
+    -> VALUES
+    ->     (1,NULL,NULL,NULL),
+    ->     (2,NULL,NULL,NULL),
+    ->     (3,NULL,NULL,NULL);
+PDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 2;
+        WHENQuery OK, 3 rows affected (0.03 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+MariaDB [game]> SELECT * FROM TicTacToe;
++----+------+------+------+
+| ID | A    | B    | C    |
++----+------+------+------+
+|  1 | NULL | NULL | NULL |
+|  2 | NULL | NULL | NULL |
+|  3 | NULL | NULL | NULL |
++----+------+------+------+
+3 rows in set (0.07 sec)
+
+MariaDB [game]> ####################################################
+MariaDB [game]> DROP TABLE IF EXISTS ttt_PlayerTurn;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+MariaDB [game]> CREATE TABLE ttt_PlayerTurn (turn VARCHAR(1) NOT NULL);
+Query OK, 0 rows affected (0.30 sec)
+
+MariaDB [game]> INSERT INTO ttt_PlayerTurn (turn) VALUES ('X');
+Query OK, 1 row affected (0.04 sec)
+
+MariaDB [game]> ####################################################
+MariaDB [game]> DROP TABLE IF EXISTS ttt_PlayerTurn;
+Query OK, 0 rows affected (0.13 sec)
+
+MariaDB [game]> CREATE TABLE ttt_PlayerTurn (turn VARCHAR(1) NOT NULL);
+Query OK, 0 rows affected (0.31 sec)
+
+MariaDB [game]> INSERT INTO ttt_PlayerTurn (turn) VALUES ('X');
+Query OK, 1 row affected (0.04 sec)
+
+MariaDB [game]> ####################################################
+MariaDB [game]> DELIMITER //
+MariaDB [game]> DROP PROCEDURE IF EXISTS ttt_CheckVictory//
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+MariaDB [game]> CREATE PROCEDURE ttt_CheckVictory ()
+    -> BEGIN
+    -> SET
+    ->     @A1 = (SELECT A FROM TicTacToe WHERE ID = 1),
+    ->     @A2 = (SELECT A FROM TicTacToe WHERE ID = 2),
+    ->     @A3 = (SELECT A FROM TicTacToe WHERE ID = 3),
+    ->     @B1 = (SELECT B FROM TicTacToe WHERE ID = 1),
+    ->     @B2 = (SELECT B FROM TicTacToe WHERE ID = 2),
+    ->     @B3 = (SELECT B FROM TicTacToe WHERE ID = 3),
+    ->     @C1 = (SELECT C FROM TicTacToe WHERE ID = 1),
+    ->     @C2 = (SELECT C FROM TicTacToe WHERE ID = 2),
+    ->     @C3 = (SELECT C FROM TicTacToe WHERE ID = 3);
+    ->
+    ->     CASE
+    ->     -- Horizontal wins
+    ->         -- Horizontal win on row 1
+    ->         WHEN
+    ->             @A1 = @B1 AND @B1 = @C1
+    ->         THEN     (SELECT *, CONCAT('Player ', @A1, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->         -- Horizontal win on row 2
+    ->         WHEN
+    ->             @A2 = @B2 AND @B2 = @C2
+    ->         THEN     (SELECT *, CONCAT('Player ', @A2, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->         -- Horizontal win on row 3
+    ->         WHEN
+    ->             @A3 = @B3 AND @B3 = @C3
+    ->         THEN     (SELECT *, CONCAT('Player ', @A3, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->     -- Vertical wins
+    ->         -- Vertical win on column A
+    ->         WHEN
+    ->             @A1 = @A2 AND @A2 = @A3
+    ->         THEN     (SELECT *, CONCAT('Player ', @A1, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->         -- Vertical win on column B
+    ->         WHEN
+    ->             @B1 = @B2 AND @B2 = @B3
+    ->         THEN     (SELECT *, CONCAT('Player ', @B1, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->         -- Vertical win on column C
+    ->         WHEN
+    ->             @C1 = @C2 AND @C2 = @C3
+    ->         THEN     (SELECT *, CONCAT('Player ', @C1, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->     -- Diagonal wins
+    ->         -- Diagonal win from A1
+    ->         WHEN
+    ->             @A1 = @B2 AND @B2 = @C3
+    ->         THEN     (SELECT *, CONCAT('Player ', @A1, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->         -- Diagonal win from A3
+    ->         WHEN
+    ->             @A3 = @B2 AND @B2 = @C1
+    ->         THEN     (SELECT *, CONCAT('Player ', @A3, ' is victorious!') AS 'Result' FROM TicTacToe);
+    ->     -- Game continues
+    ->         ELSE (SELECT *, 'Game is still ongoing'  AS 'Result' FROM TicTacToe);
+    ->     END CASE;
+    -> END//
+Query OK, 0 rows affected (0.08 sec)
+
+MariaDB [game]> DELIMITER ;
+MariaDB [game]> ####################################################
+MariaDB [game]> DELIMITER //
+MariaDB [game]> DROP PROCEDURE IF EXISTS ttt_PlayerMove//
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+MariaDB [game]> CREATE PROCEDURE ttt_PlayerMove(p_move VARCHAR(1), p_column VARCHAR(1), p_row INT)
+    -> BEGIN
+    ->     -- Check for valid player input
+    ->     IF p_move NOT IN ('X', 'O')
+    ->         THEN (SELECT 'Move must be X or O');
+    ->     END IF;
+    ->     -- Check for valid column
+    ->     IF p_column NOT IN ('A', 'B', 'C')
+    ->         THEN (SELECT 'Column must be A, B or C');
+    ->     END IF;
+    ->     -- Check for valid row
+    ->     IF p_row NOT IN (1,2,3)
+    ->         THEN (SELECT 'Row must be 1, 2 or 3');
+    ->     END IF;
+    ->     -- Check for player turn and update player turn
+    ->     IF p_move != (SELECT turn FROM ttt_PlayerTurn)
+    ->       THEN (SELECT
+    ->                 CONCAT('This turn belongs to player ', (SELECT turn FROM ttt_PlayerTurn), '!')
+    ->       );
+    ->     ELSE
+    ->       SELECT CONCAT('Good, ', p_move, ' have played!');
+    ->       -- UPDATE TicTacToe SET p_column = p_move WHERE ID = p_row;
+    ->       CASE
+    ->         WHEN p_column = "A" AND p_row = 1 THEN
+    ->           UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 1;
+    ->         WHEN p_column = "B" AND p_row = 1 THEN
+    ->           UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 1;
+    ->         WHEN p_column = "C" AND p_row = 1 THEN
+    ->           UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 1;
+    ->         WHEN p_column = "A" AND p_row = 2 THEN
+    ->           UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 2;
+    ->         WHEN p_column = "B" AND p_row = 2 THEN
+    ->           UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 2;
+    ->         WHEN p_column = "C" AND p_row = 2 THEN
+    ->           UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 2;
+    ->         WHEN p_column = "A" AND p_row = 3 THEN
+    ->           UPDATE TicTacToe SET A = CONCAT("", p_move) WHERE ID = 3;
+    ->         WHEN p_column = "B" AND p_row = 3 THEN
+    ->           UPDATE TicTacToe SET B = CONCAT("", p_move) WHERE ID = 3;
+    ->         WHEN p_column = "C" AND p_row = 3 THEN
+    ->           UPDATE TicTacToe SET C = CONCAT("", p_move) WHERE ID = 3;
+    ->       END CASE;
+    ->       UPDATE ttt_PlayerTurn SET turn = CASE WHEN turn = 'X' THEN 'O' WHEN turn = 'O' THEN 'X' END;
+    ->     END IF;
+    ->     -- Check if victory is achieved
+    ->     CALL ttt_CheckVictory();
+    -> END//
+Query OK, 0 rows affected (0.07 sec)
+
+MariaDB [game]> DELIMITER ;
+MariaDB [game]> ####################################################
+MariaDB [game]> DELIMITER //
+MariaDB [game]> DROP PROCEDURE IF EXISTS ttt_ResetBoard//
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+MariaDB [game]> CREATE PROCEDURE ttt_ResetBoard()
+    -> BEGIN
+    -> UPDATE TicTacToe SET A=NULL,B=NULL,C=NULL WHERE ID IN (1,2,3);
+    -> UPDATE ttt_PlayerTurn SET turn = 'X';
+    -> END//
+Query OK, 0 rows affected (0.08 sec)
+
+MariaDB [game]> DELIMITER ;
+MariaDB [game]> ####################################################
+MariaDB [game]> # THE PLAYER WHO SHOULD PLAY IS X
+MariaDB [game]> CALL ttt_PlayerMove('X','A',1);
++-------------------------------------------+
+| CONCAT('Good, ', p_move, ' have played!') |
++-------------------------------------------+
+| Good, X have played!                      |
++-------------------------------------------+
+1 row in set (0.00 sec)
+
++----+------+------+------+-----------------------+
+| ID | A    | B    | C    | Result                |
++----+------+------+------+-----------------------+
+|  1 | X    | NULL | NULL | Game is still ongoing |
+|  2 | NULL | NULL | NULL | Game is still ongoing |
+|  3 | NULL | NULL | NULL | Game is still ongoing |
++----+------+------+------+-----------------------+
+3 rows in set (0.08 sec)
+
+Query OK, 0 rows affected (0.08 sec)
+
+MariaDB [game]> CALL ttt_PlayerMove('O','C',2);
++-------------------------------------------+
+| CONCAT('Good, ', p_move, ' have played!') |
++-------------------------------------------+
+| Good, O have played!                      |
++-------------------------------------------+
+1 row in set (0.01 sec)
+
++----+------+------+------+-----------------------+
+| ID | A    | B    | C    | Result                |
++----+------+------+------+-----------------------+
+|  1 | X    | NULL | NULL | Game is still ongoing |
+|  2 | NULL | NULL | O    | Game is still ongoing |
+|  3 | NULL | NULL | NULL | Game is still ongoing |
++----+------+------+------+-----------------------+
+3 rows in set (0.09 sec)
+
+Query OK, 0 rows affected (0.09 sec)
+
+MariaDB [game]> CALL ttt_PlayerMove('X','A',2);
++-------------------------------------------+
+| CONCAT('Good, ', p_move, ' have played!') |
++-------------------------------------------+
+| Good, X have played!                      |
++-------------------------------------------+
+1 row in set (0.00 sec)
+
++----+------+------+------+-----------------------+
+| ID | A    | B    | C    | Result                |
++----+------+------+------+-----------------------+
+|  1 | X    | NULL | NULL | Game is still ongoing |
+|  2 | X    | NULL | O    | Game is still ongoing |
+|  3 | NULL | NULL | NULL | Game is still ongoing |
++----+------+------+------+-----------------------+
+3 rows in set (0.08 sec)
+
+Query OK, 0 rows affected (0.08 sec)
+
+MariaDB [game]> CALL ttt_PlayerMove('O','B',2);
++-------------------------------------------+
+| CONCAT('Good, ', p_move, ' have played!') |
++-------------------------------------------+
+| Good, O have played!                      |
++-------------------------------------------+
+1 row in set (0.00 sec)
+
++----+------+------+------+-----------------------+
+| ID | A    | B    | C    | Result                |
++----+------+------+------+-----------------------+
+|  1 | X    | NULL | NULL | Game is still ongoing |
+|  2 | X    | O    | O    | Game is still ongoing |
+|  3 | NULL | NULL | NULL | Game is still ongoing |
++----+------+------+------+-----------------------+
+3 rows in set (0.09 sec)
+
+Query OK, 0 rows affected (0.09 sec)
+
+MariaDB [game]> CALL ttt_PlayerMove('X','A',3);
++-------------------------------------------+
+| CONCAT('Good, ', p_move, ' have played!') |
++-------------------------------------------+
+| Good, X have played!                      |
++-------------------------------------------+
+1 row in set (0.00 sec)
+
++----+------+------+------+-------------------------+
+| ID | A    | B    | C    | Result                  |
++----+------+------+------+-------------------------+
+|  1 | X    | NULL | NULL | Player X is victorious! |
+|  2 | X    | O    | O    | Player X is victorious! |
+|  3 | X    | NULL | NULL | Player X is victorious! |
++----+------+------+------+-------------------------+
+3 rows in set (0.09 sec)
+
+Query OK, 0 rows affected (0.09 sec)
+
+MariaDB [game]> CALL ttt_CheckVictory();
++----+------+------+------+-------------------------+
+| ID | A    | B    | C    | Result                  |
++----+------+------+------+-------------------------+
+|  1 | X    | NULL | NULL | Player X is victorious! |
+|  2 | X    | O    | O    | Player X is victorious! |
+|  3 | X    | NULL | NULL | Player X is victorious! |
++----+------+------+------+-------------------------+
+3 rows in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+MariaDB [game]> \q
+Bye
