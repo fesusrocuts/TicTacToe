@@ -169,12 +169,19 @@ END//
 DELIMITER ;
 ####################################################
 # THE PLAYER WHO SHOULD PLAY IS X
+# THIS EXAMPLE IS TO GAME TIED
 CALL ttt_PlayerMove('X','A',1);
+CALL ttt_PlayerMove('O','B',2);
+CALL ttt_PlayerMove('X','C',3);
+CALL ttt_PlayerMove('O','B',1);
+CALL ttt_PlayerMove('X','B',3);
+CALL ttt_PlayerMove('O','A',3);
+CALL ttt_PlayerMove('X','C',1);
 CALL ttt_PlayerMove('O','C',2);
 CALL ttt_PlayerMove('X','A',2);
-CALL ttt_PlayerMove('O','B',2);
-CALL ttt_PlayerMove('X','A',3);
+# YOU WANT SEE HOW IS THE PLAY
 CALL ttt_CheckVictory();
+# RESTART TO PLAY
 CALL ttt_ResetBoard();
 SELECT * FROM TicTacToe;
 ####################################################
