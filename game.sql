@@ -30,6 +30,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS ttt_CheckVictory//
 CREATE PROCEDURE ttt_CheckVictory ()
 BEGIN
+DECLARE NO INT; -- NUMBER OPTIONS
 SET
     @A1 = (SELECT A FROM TicTacToe WHERE ID = 1),
     @A2 = (SELECT A FROM TicTacToe WHERE ID = 2),
@@ -78,7 +79,13 @@ SET
             @A3 = @B2 AND @B2 = @C1
         THEN     (SELECT *, CONCAT('Player ', @A3, ' is victorious!') AS 'Result' FROM TicTacToe);
     -- Game continues
-        ELSE (SELECT *, 'Game is still ongoing'  AS 'Result' FROM TicTacToe);
+        ELSE
+          SET NO = (SELECT SUM(r.t) t from (select sum(IF(A IS NULL,1,0)+IF(B IS NULL,1,0)+IF(C IS NULL,1,0)) as t from TicTacToe group by a) as r);
+          IF NO > 0 THEN
+            (SELECT *, 'Game is still ongoing'  AS 'Result' FROM TicTacToe);
+          ELSE
+            (SELECT *, 'Game is TIED'  AS 'Result' FROM TicTacToe);
+          END IF;
     END CASE;
 END//
 DELIMITER ;
@@ -88,6 +95,7 @@ DROP PROCEDURE IF EXISTS ttt_PlayerMove//
 CREATE PROCEDURE ttt_PlayerMove(p_move VARCHAR(1), p_column VARCHAR(1), p_row INT)
 BEGIN
     DECLARE R1 INT;
+
     -- Check for valid player input
     IF p_move NOT IN ('X', 'O')
         THEN (SELECT 'Move must be X or O');
