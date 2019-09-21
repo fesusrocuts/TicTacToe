@@ -1,4 +1,5 @@
 # To compile this code use: http://www.quitebasic.com/
+## Please resise the canvas to 25 x 25
 1 CLS
 3 PRINT "------TIC TAC TOE GAME--------"
 4 PAUSE 500
@@ -59,7 +60,7 @@
 543 GOTO 547
 544 IF A[6] = G THEN GOTO 590
 545 GOTO 547
-546 IF A[8] = G THEN GOTO 590
+546 IF A[8] = G THEN GOTO 590 ELSE GOTO 542
 547 IF A[3] = G THEN GOTO 550
 548 IF A[6] = G THEN GOTO 555
 549 GOTO 580
